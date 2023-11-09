@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Hangfire;
+using BackgroundJobs.Models;
 
 namespace BackgroundJobs.Controllers
 {
@@ -6,28 +8,30 @@ namespace BackgroundJobs.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
+        private readonly AppDbContext appDbContext;
+        public WeatherForecastController(AppDbContext context)
         {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-
-        private readonly ILogger<WeatherForecastController> _logger;
-
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
-        {
-            _logger = logger;
+            appDbContext = context;
         }
-
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+      
+       
+        [HttpGet(Name = "FireHangfire")]
+        public async Task<IActionResult> Get()
         {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            var email = new Email
             {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+
+                From = "th091605@gmail.com",
+                To = "nordingsoftversko@gmail.com",
+                Subject = "Test",
+                Body = "Test",
+                Sent = DateTime.Now
+                
+            };
+            appDbContext.Emails.Add(email);
+            await appDbContext.SaveChangesAsync();
+            return Ok();
+
         }
     }
 }
